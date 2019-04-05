@@ -1,0 +1,22 @@
+{
+  "name": "s3mailreader",
+  "version": "1.0.0",
+  "description": "Web based SES-S3 mail parser and reader written in nodejs",
+  "main": "server.js",
+  "files": [
+    "bin"
+  ],
+  "bin": {
+    "s3mailreader": "./bin/server.js"
+  },
+  "repository": "davebra/s3mailreader",
+  "author": "davebra",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.433.0",
+    "express": "^4.16.4",
+    "lodash": "^4.17.11",
+    "mailparser": "^2.6.0",
+    "yargs": "^13.2.2"
+  }
+}
