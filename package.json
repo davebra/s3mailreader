@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Web based SES-S3 mail parser and reader written in nodejs",
   "main": "server.js",
+  "scripts": {
+    "build": "node server.js"
+  },
   "files": [
     "bin"
   ],
@@ -17,6 +20,13 @@
     "express": "^4.16.4",
     "lodash": "^4.17.11",
     "mailparser": "^2.6.0",
+    "purecss": "^1.0.0",
     "yargs": "^13.2.2"
+  },
+  "devDependencies": {
+    "angular": "^1.7.8",
+    "angular-sanitize": "^1.7.8",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.3.0"
   }
 }

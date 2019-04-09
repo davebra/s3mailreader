@@ -36,7 +36,6 @@ const argv = require('yargs')
         alias: 'region',
         demandOption: false,
         describe: 'region of you S3 bucket, e.g. "ap-south-2"',
-        default: '',
         type: 'string'
     })
     .option('a', {
@@ -61,44 +60,52 @@ const argv = require('yargs')
     .option('p', {
         alias: 'port',
         demandOption: false,
-        default: 3333,
-        describe: 'port where the web server listen',
+        default: 8003,
+        describe: 'web application port to use',
         type: 'int'
     }).argv;
 
-    
-if (typeof AWS.config.region === "undefined"){
-    if (argv.region.length > 0 && ["us-east-2","us-east-1","us-west-1","us-west-2","ap-south-1","ap-northeast-3","ap-northeast-2","ap-southeast-1","ap-southeast-2","ap-northeast-1","ca-central-1","cn-north-1","cn-northwest-1","eu-central-1","eu-west-1","eu-west-2","eu-west-3","eu-north-1","sa-east-1"].includes(argv.region)){
+// check if region is passed as argument and is valid, otherwise check if is available a region in the ~/.aws/config 
+if(typeof argv.region !== "undefined"){
+    if (["us-east-2","us-east-1","us-west-1","us-west-2","ap-south-1","ap-northeast-3","ap-northeast-2","ap-southeast-1","ap-southeast-2","ap-northeast-1","ca-central-1","cn-north-1","cn-northwest-1","eu-central-1","eu-west-1","eu-west-2","eu-west-3","eu-north-1","sa-east-1"].includes(argv.region)){
         AWS.config.update({region: argv.region});
     } else {
-        console.error('Error: missing or invalid AWS region'); 
-        process.exit(1);
-    } 
-}
-
-const awsCred = new AWS.SharedIniFileCredentials({profile: argv.credentials});
-if (awsCred.accessKeyId === undefined) {
-    if (typeof argv.accessid === "undefined" &&
-        typeof argv.secretkey === "undefined"
-        ){
-        AWS.config.update({accessKeyId: argv.accessid, secretAccessKey: argv.secretkey});
-    } else {
-        console.error('Error: invalid AWS credentials'); 
+        console.error('Error: invalid AWS region'); 
         process.exit(1);
     }
-} else {
-    AWS.config.credentials = awsCred;
+} else if (typeof AWS.config.region === "undefined") {
+    console.error('Error: missing AWS region in your configuration, check your .aws/config file or pass the region as argument'); 
+    process.exit(1);
 }
 
-const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+// check if accessKeyId/secretAccessKey are passed as arguments, otherwise check if is has been loaded a ~/.aws/credentials file with valid profile
+if (typeof argv.accessid !== "undefined" && typeof argv.secretkey !== "undefined"){
+    AWS.config.update({accessKeyId: argv.accessid, secretAccessKey: argv.secretkey});
+} else {
+    const awsCred = new AWS.SharedIniFileCredentials({profile: argv.credentials});
+    if (awsCred.accessKeyId === undefined) {
+        console.error('Error: invalid AWS credentials, check your .aws/credentials file or pass the accessKeyId/secretAccessKey as arguments'); 
+        process.exit(1);
+    } else {
+        AWS.config.credentials = awsCred;
+    }
+}
 
+// initialize components
+const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const port = argv.port || 3000;
 const app = express();
 const router = require('express').Router();
 
-// list files inside the bucket/directory
+// return the webapp template
 router.get('/', async (req, res) => {
+    res.sendFile('index.html', {root: path.join(__dirname, '../src/') })
+});
 
+// list files inside the bucket/directory
+router.get('/list', async (req, res) => {
+
+    // prepare s3 request object
     const request = {
         Bucket: argv.bucket,
         Delimiter: '/',
@@ -106,51 +113,104 @@ router.get('/', async (req, res) => {
     };
 
     try {
-
+        // get the list of the files inside the folder
         const data = await s3.listObjects(request).promise();
-        console.log(data);
 
-        //email.attachments[0].content.toString()
-
-        //mailHtml = fs.readFileSync(path.join(__dirname, '../wispmail/', 'welcome.html'), {encoding:'utf-8'});
-        
-        //const templateFn = _.template(mailHtml);
-
-        //const mailHtmlTemplate = templateFn({ 'name': name, 'password': pass });
-
-        return res.send(data.Contents);
-
-    } catch (Error) {
-        return res.send(Error.stack);
+        // return the obj array of files
+        res.send(data.Contents);
+    } catch (e) {
+        console.log(e);
+        res.status(500).end();
     }
 
 });
 
-// open a specific file
-router.get('/:filename', async (req, res) => {
+// open a specific mail-file
+router.get('/mail/:encfilekey', async (req, res) => {
 
+    // the filekey could have the directory (e.g. folder/filehash)
+    // to avoid router errors the filekey is base64 encoded
+
+    // prepare s3 request object
     const request = {
         Bucket: argv.bucket,
-        Key: argv.directory + '/' + req.params.filename,
+        Key: Buffer.from(req.params.encfilekey, 'base64').toString(),
+    };
+
+    try {
+        
+        // get and parse the email from s3
+        const data = await s3.getObject(request).promise();
+        var email = await simpleParser(data.Body);
+
+        // if there are attachments, remove the attachment content (avoid to send to the browser the content of email's attachments)
+        if ( typeof email.attachments !== 'undefined' ){
+            for (index = 0; index < email.attachments.length; ++index) {
+                delete email.attachments[index].content;
+            }
+        }
+
+        // return the email json obj
+        res.send(email);
+
+    } catch (e) {
+        console.log(e);
+        res.status(500).end();
+    }
+
+});
+
+// download a specific attachment of a mail-file
+router.get('/mail/:encfilekey/:checksum', async (req, res) => {
+
+    // the filekey could have the directory (e.g. folder/filehash)
+    // to avoid router errors the filekey is base64 encoded
+
+    // prepare s3 request object
+    const request = {
+        Bucket: argv.bucket,
+        Key: Buffer.from(req.params.encfilekey, 'base64').toString(),
     };
 
     try {
 
+        // get and parse the email from s3
         const data = await s3.getObject(request).promise();
         const email = await simpleParser(data.Body);
+        let file;
 
-        // email.attachments[0].content.toString()
+        // foreach attachments, check which one has been requested and save it on a variable
+        if ( typeof email.attachments !== 'undefined' ){
+            for (index = 0; index < email.attachments.length; ++index) {
+                if( req.params.checksum === email.attachments[index].checksum ){
+                    file = email.attachments[index];
+                    break;
+                }                
+            }
+        }
 
-        return res.send(email);
+        // attachments are saved as buffer in s3
+        const fileContent = Buffer.from(file.content);
 
-    } catch (Error) {
-        return res.send(Error.stack);
+        // return the file, browsers should download it
+        res.writeHead(200, {
+            'Content-Type': file.contentType,
+            'Content-Disposition': 'attachment; filename=' + file.filename,
+            'Content-Length': fileContent.length
+        });
+        res.end(fileContent);
+
+    } catch (e) {
+        console.log(e);
+        res.status(500).end();
     }
 
 });
 
+// set the expressjs routes
 app.use('/', router);
 
+// start the expressjs server on the port
 app.listen(port, function () {
     console.log("Running SesS3MimeMailClient on port " + port);
 });

@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en" ng-app="mailApp">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>
+<link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+<style>
+body {
+    color: #333;
+}
+a {
+    text-decoration: none;
+    color: #1b98f8;
+}
+#layout, #list, #main {
+    margin: 0;
+    padding: 0;
+}
+#main {
+    width: 100%;
+}
+#list {
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+.email-item {
+    padding: 0.9em 1em;
+    border-bottom: 1px solid #ddd;
+    border-left: 6px solid transparent;
+    width: 100%;
+}
+.email-key,
+.email-time {
+    margin: 0;
+}
+.email-key {
+    padding: 0.9em 0;
+    color: #999;
+}
+.email-desc {
+    font-size: 80%;
+    margin: 0.4em 0;
+}
+.email-item:hover {
+    background: #eee;
+    cursor: pointer;
+}
+.email-item-selected {
+    background: #ddd;
+}
+.email-content-header, .email-content-body, .email-content-footer {
+    padding: 1em 2em;
+}
+.email-content-header {
+    border-bottom: 1px solid #ddd;
+}
+.email-content-title {
+    margin: 0.5em 0 0;
+}
+.email-content-subtitle {
+    font-size: 1em;
+    margin: 0;
+    font-weight: normal;
+}
+.email-content-subtitle span {
+    color: #999;
+}
+.email-content-controls {
+    margin-top: 2em;
+    text-align: right;
+}
+.email-content-controls .secondary-button {
+    margin-bottom: 0.3em;
+}
+.email-avatar {
+    width: 40px;
+    height: 40px;
+}
+@media (min-width: 40em) {
+    #layout {
+        padding-left:350px;
+        position: relative;
+    }
+    #list {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        overflow: auto;
+    }
+    #list {
+        margin-left: -350px;
+        width: 100%;
+        height: 33%;
+        border-bottom: 1px solid #ddd;
+    }
+    #main {
+        position: fixed;
+        top: 33%;
+        right: 0;
+        bottom: 0;
+        left: 150px;
+        overflow: auto;
+    }
+}
+@media (min-width: 60em) {
+    #list {
+        margin-left: -350px;
+        width:350px;
+        height: 100%;
+        border-right: 1px solid #ddd;
+    }
+    #main {
+        position: static;
+        margin: 0;
+        padding: 0;
+    }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.7.8/angular.min.js" integrity="sha256-23hi0Ag650tclABdGCdMNSjxvikytyQ44vYGo9HyOrU=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-sanitize/1.7.8/angular-sanitize.min.js" integrity="sha256-rkC3YaCKtbLotg8lQpxqYki+DDOVXjcA5wTSxjRlI0E=" crossorigin="anonymous"></script>
+<script>
+var app = angular.module('mailApp', ['ngSanitize']);
+app.controller('mailController', ['$scope', '$http', '$location', function($scope, $http, $location) {
+    $scope.selKey = null;
+    $scope.selIndex = null;
+    $http.get('/list').then( function(result) {
+        $scope.mails = result.data;
+        $scope.mail = null;
+    }).catch(function(e){
+        console.log(e);
+    });
+    $scope.open = function(key, i){
+        $scope.selKey = btoa(key);
+        $scope.selIndex = i;
+        $scope.mail = null;
+        $http.get('/mail/' + $scope.selKey).then( function(result) {
+        $scope.mail = result.data;
+        }).catch(function(e){
+           console.log(e);
+        });
+    }
+}]);
+app.filter('bytes', function() {
+	return function(bytes, precision) {
+		if (isNaN(parseFloat(bytes)) || !isFinite(bytes)) return '-';
+		if (typeof precision === 'undefined') precision = 1;
+		var units = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'],
+			number = Math.floor(Math.log(bytes) / Math.log(1024));
+		return (bytes / Math.pow(1024, Math.floor(number))).toFixed(precision) +  ' ' + units[number];
+	}
+});
+</script>
+</head>
+<body ng-controller="mailController">
+<div id="layout" class="content pure-g">
+    <div id="list" class="pure-g">
+        <div class="pure-g" ng-show="!mails">
+            <div class="pure-u-3-4">
+                <h4 class="email-time">Loading...</h4>
+            </div>
+        </div>
+        <div class="pure-g" ng-show="mails.length < 1">
+            <div class="pure-u-3-4">
+                <h4 class="email-time">Your bucket/folder is empty</h4>
+            </div>
+        </div>
+        <div class="email-item pure-g" ng-repeat="m in mails | orderBy:'-LastModified'" ng-click="open(m.Key, $index)" ng-class="{'email-item-selected':(selIndex === $index)}">
+            <div class="pure-u-3-4">
+                <p class="email-desc">size {{m.Size | bytes}}</p>
+                <h4 class="email-time">{{m.LastModified | date: 'dd-MM-yyyy HH:mm:ss Z'}}</h4>
+                <h6 class="email-key">{{m.Key}}</h6>
+            </div>
+        </div>
+    </div>
+    <div id="main" class="pure-u-1">
+        <div class="email-content" ng-hide="!mail">
+            <div class="email-content-header pure-g">
+                <div class="pure-u-1-2">
+                    <h1 class="email-content-title">{{mail.subject}}</h1>
+                    <p class="email-content-subtitle">
+                        From <strong ng-bind-html="mail.from.html"></strong> at <span>{{mail.date | date: 'dd-MM-yyyy HH:mm:ss Z'}}</span>
+                    </p>
+                    <p ng-show="mail.attachments.length > 0">Attachments:</p>
+                    <ul class="email-content-attachments" ng-show="mail.attachments.length > 0">
+                        <li ng-repeat="a in mail.attachments"><a ng-href="/mail/{{selKey}}/{{a.checksum}}">{{a.filename}}</a> <span>({{a.size | bytes}})</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="email-content-body" ng-bind-html="(mail.html) ? mail.html : mail.textAsHtml"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
