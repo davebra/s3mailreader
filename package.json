@@ -4,15 +4,25 @@
   "description": "Web based SES-S3 mail parser and reader written in nodejs",
   "main": "server.js",
   "scripts": {
-    "build": "node server.js"
+    "start": "node ./bin/s3mailreader.js"
   },
   "files": [
     "bin"
   ],
   "bin": {
-    "s3mailreader": "./bin/server.js"
+    "s3mailreader": "./bin/s3mailreader.js"
   },
-  "repository": "davebra/s3mailreader",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davebra/s3mailreader.git"
+  },
+  "keywords": [
+    "s3",
+    "ses",
+    "mail",
+    "client",
+    "reader"
+  ],
   "author": "davebra",
   "license": "MIT",
   "dependencies": {
@@ -28,5 +38,9 @@
     "angular-sanitize": "^1.7.8",
     "webpack": "^4.29.6",
     "webpack-cli": "^3.3.0"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/davebra/s3mailreader/issues"
+  },
+  "homepage": "https://github.com/davebra/s3mailreader#readme"
 }

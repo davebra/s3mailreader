@@ -99,7 +99,7 @@ const router = require('express').Router();
 
 // return the webapp template
 router.get('/', async (req, res) => {
-    res.sendFile('index.html', {root: path.join(__dirname, '../src/') })
+    res.sendFile('index.html', {root: path.join(__dirname, 'src/') })
 });
 
 // list files inside the bucket/directory
@@ -212,5 +212,5 @@ app.use('/', router);
 
 // start the expressjs server on the port
 app.listen(port, function () {
-    console.log("Running SesS3MimeMailClient on port " + port);
+    console.log("s3mailreader is running on port " + port);
 });

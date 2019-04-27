@@ -162,7 +162,7 @@ app.filter('bytes', function() {
         </div>
         <div class="pure-g" ng-show="mails.length < 1">
             <div class="pure-u-3-4">
-                <h4 class="email-time">Your bucket/folder is empty</h4>
+                <h4 class="email-time">This bucket/folder doesn't contain any file, maybe you missed the -d (--directory) parameter?</h4>
             </div>
         </div>
         <div class="email-item pure-g" ng-repeat="m in mails | orderBy:'-LastModified'" ng-click="open(m.Key, $index)" ng-class="{'email-item-selected':(selIndex === $index)}">
@@ -176,7 +176,7 @@ app.filter('bytes', function() {
     <div id="main" class="pure-u-1">
         <div class="email-content" ng-hide="!mail">
             <div class="email-content-header pure-g">
-                <div class="pure-u-1-2">
+                <div class="pure-u-1">
                     <h1 class="email-content-title">{{mail.subject}}</h1>
                     <p class="email-content-subtitle">
                         From <strong ng-bind-html="mail.from.html"></strong> at <span>{{mail.date | date: 'dd-MM-yyyy HH:mm:ss Z'}}</span>
