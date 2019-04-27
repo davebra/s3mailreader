@@ -2,8 +2,6 @@
 
 List contents of an S3 bucket 'folder'. Node.js module and command line executable.
 
-![travis-ci build](https://travis-ci.org/davebra/s3mailreader.svg?branch=master)
-
 ## Screenshot
 
 ![s3mailreader preview](https://raw.githubusercontent.com/davebra/s3mailreader/master/screenshot.jpg)

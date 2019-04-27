@@ -4,7 +4,6 @@
   "description": "Web based SES-S3 mail parser and reader written in nodejs",
   "main": "server.js",
   "scripts": {
-    "test": "npm start",
     "start": "node ./bin/s3mailreader.js"
   },
   "files": [
