@@ -4,6 +4,7 @@
   "description": "Web based SES-S3 mail parser and reader written in nodejs",
   "main": "server.js",
   "scripts": {
+    "test": "npm start",
     "start": "node ./bin/s3mailreader.js"
   },
   "files": [
@@ -32,12 +33,6 @@
     "mailparser": "^2.6.0",
     "purecss": "^1.0.0",
     "yargs": "^13.2.2"
-  },
-  "devDependencies": {
-    "angular": "^1.7.8",
-    "angular-sanitize": "^1.7.8",
-    "webpack": "^4.29.6",
-    "webpack-cli": "^3.3.0"
   },
   "bugs": {
     "url": "https://github.com/davebra/s3mailreader/issues"
