@@ -1,6 +1,8 @@
 # s3mailreader
 
-List contents of an S3 bucket 'folder'. Node.js module and command line executable.
+s3mailreader is a simple mail-client application that reads emails-MIME files from an S3 bucket. 
+
+Why I need it? Imagine you have your new domain/service setup and you need a really simple mailbox, who needs a server when you can have it with AWS services, with SES Receipt Rules, go serverless! But, in the end you have just a bunch of MIME files, not really easy to read. So, s3mailreader can help you, it opens the MIME-email files, parses, and shows in a lightweight single web app. You can also download the attachments!
 
 ## Screenshot
 
@@ -37,6 +39,11 @@ s3mailreader -b bucketname -d directory -r awsregion -k credentialprofile -a acc
 - `-p, --port` - The port to listen the service, by default is 3333
 
 ## Changelog
+
+#### v1.1.0
+
+- Serve CSS and JS from local npm_modules instead of CDN
+- Switch to Boostrap
 
 #### v1.0.0
 

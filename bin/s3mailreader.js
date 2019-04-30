@@ -4,7 +4,6 @@ process.env.AWS_SDK_LOAD_CONFIG = true;
 
 // Native
 const path = require('path');
-const fs = require('fs');
 
 // Packages
 const express = require('express');
@@ -95,12 +94,7 @@ if (typeof argv.accessid !== "undefined" && typeof argv.secretkey !== "undefined
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const port = argv.port || 3000;
 const app = express();
-const router = require('express').Router();
-
-// return the webapp template
-router.get('/', async (req, res) => {
-    res.sendFile('index.html', {root: path.join(__dirname, 'src/') })
-});
+const router = express.Router();
 
 // list files inside the bucket/directory
 router.get('/list', async (req, res) => {
@@ -207,8 +201,16 @@ router.get('/mail/:encfilekey/:checksum', async (req, res) => {
 
 });
 
+// return the webapp template
+router.get('/', async (req, res) => {
+    res.sendFile('index.html', {root: path.join(__dirname, 'src/') })
+});
+
 // set the expressjs routes
 app.use('/', router);
+
+// set the static files from node_modules
+app.use('/node_modules', express.static(path.join(__dirname, '/../node_modules')));
 
 // start the expressjs server on the port
 app.listen(port, function () {
