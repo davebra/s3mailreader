@@ -36,9 +36,13 @@ s3mailreader -b bucketname -d directory -r awsregion -k credentialprofile -a acc
 - `-k, --credentials` - The profile to use from ~/.aws/credentials, by default it uses 'default'
 - `-a, --accessid` - The AWS IAM accessKeyId. Required of no ~/.aws/credentials is found
 - `-s, --secretkey` - The AWS IAM secretAccessKey. Required of no ~/.aws/credentials is found
-- `-p, --port` - The port to listen the service, by default is 3333
+- `-p, --port` - The port to listen the service, by default is 8003
 
 ## Changelog
+
+#### v1.1.1
+
+- Minor UI fixes
 
 #### v1.1.0
 

@@ -9,6 +9,13 @@
     #list, #main, .scrollable{
         height: 100vh;
     }
+    .email-item:hover{
+        cursor: pointer;
+        background: #fafafa;
+    }
+    .email-item.email-item-selected{
+        background: #f2f2f2;
+    }
 </style>
 </head>
 <body ng-controller="mailController">
@@ -21,7 +28,7 @@
                     <h4 class="p-2" ng-show="!mails">Loading...</h4>
                     <h4 class="p-2" ng-show="mails.length < 1">This bucket/folder doesn't contain any file, maybe you missed the -d (--directory) parameter?</h4>
         
-                    <div class="p-2 border-bottom" ng-repeat="m in mails | orderBy:'-LastModified'" ng-click="open(m.Key, $index)" ng-class="{'bg-light':(selIndex === $index)}">
+                    <div class="p-2 border-bottom email-item" ng-repeat="m in mails | orderBy:'-LastModified'" ng-click="open(m.Key, $index)" ng-class="{'email-item-selected':(selIndex === $index)}">
                         <p class="text-muted"><small><strong>size {{m.Size | bytes}}</strong></small></p>
                         <h6>{{m.LastModified | date: 'dd-MM-yyyy HH:mm:ss Z'}}</h6>
                         <p class="text-muted"><small>{{m.Key}}</small></p>
@@ -31,6 +38,7 @@
         </div>
 
         <div id="main" class="col-9 overflow-hidden p-0">
+            <h4 class="p-2" ng-show="loadingmail">Loading...</h4>
             <div class="row scrollable overflow-auto">
                 <div class="col-12 pl-5 pr-5 pt-3" ng-hide="!mail">
                     <h1>{{mail.subject}}</h1>
@@ -54,6 +62,7 @@ var app = angular.module('mailApp', ['ngSanitize']);
 app.controller('mailController', ['$scope', '$http', '$location', function($scope, $http, $location) {
     $scope.selKey = null;
     $scope.selIndex = null;
+    $scope.loadingmail = false;
     $http.get('/list').then( function(result) {
         $scope.mails = result.data;
         $scope.mail = null;
@@ -64,8 +73,10 @@ app.controller('mailController', ['$scope', '$http', '$location', function($scop
         $scope.selKey = btoa(key);
         $scope.selIndex = i;
         $scope.mail = null;
+        $scope.loadingmail = true;
         $http.get('/mail/' + $scope.selKey).then( function(result) {
-        $scope.mail = result.data;
+            $scope.mail = result.data;
+            $scope.loadingmail = false;
         }).catch(function(e){
            console.log(e);
         });
